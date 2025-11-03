@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block page_title %}Relatórios Gerenciais{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Estatísticas</h2>
+    <div class="btn-group">
+        <button class="btn btn-outline-primary" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>Imprimir
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Valorização do Estoque -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Valorização do Estoque</h5>
+            </div>
+            <div class="card-body text-center">
+                <h3 class="text-primary">R$ {{ "%.2f"|format(valorizacao_estoque.valor_total or 0) }}</h3>
+                <p class="mb-1">Valor Total em Estoque</p>
+                <hr>
+                <div class="row text-start">
+                    <div class="col-6">
+                        <small class="text-muted">Total de Produtos:</small><br>
+                        <strong>{{ valorizacao_estoque.total_produtos }}</strong>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Estoque Baixo:</small><br>
+                        <strong class="text-warning">{{ valorizacao_estoque.produtos_estoque_baixo }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movimentações por Tipo -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Movimentações (Últimos 30 Dias)</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Motivo</th>
+                                <th>Quantidade</th>
+                                <th>Total Itens</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mov in movimentacoes_periodo %}
+                            <tr>
+                                <td>
+                                    {% if mov.tipo == 'entrada' %}
+                                        <span class="badge bg-success">Entrada</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Saída</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ mov.motivo|title }}</td>
+                                <td>{{ mov.quantidade }}</td>
+                                <td>{{ mov.total_itens }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Produtos Mais Movimentados -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Produtos Mais Movimentados (Últimos 30 Dias)</h5>
+    </div>
+    <div class="card-body">
+        {% if produtos_movimentados %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Entradas</th>
+                        <th>Saídas</th>
+                        <th>Total Movimentações</th>
+                        <th>Saldo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos_movimentados %}
+                    <tr>
+                        <td>{{ produto.nome }}</td>
+                        <td class="text-success">{{ produto.entradas or 0 }}</td>
+                        <td class="text-warning">{{ produto.saidas or 0 }}</td>
+                        <td>{{ produto.total_movimentacoes }}</td>
+                        <td class="fw-bold {% if (produto.entradas or 0) - (produto.saidas or 0) > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {{ (produto.entradas or 0) - (produto.saidas or 0) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="fas fa-chart-line fa-2x text-muted mb-3"></i>
+            <p class="text-muted">Não há dados de movimentação nos últimos 30 dias</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Indicadores de Performance -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Indicadores de Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Total de Movimentações (30 dias)
+                        <span class="badge bg-primary rounded-pill">
+                            {{ movimentacoes_periodo|sum(attribute='quantidade') }}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Itens Movimentados (30 dias)
+                        <span class="badge bg-info rounded-pill">
+                            {{ movimentacoes_periodo|sum(attribute='total_itens') }}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Taxa de Rotatividade
+                        <span class="badge bg-success rounded-pill">
+                            {{ "%.1f"|format((movimentacoes_periodo|sum(attribute='total_itens') / valorizacao_estoque.total_produtos * 100) if valorizacao_estoque.total_produtos > 0 else 0) }}%
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Resumo por Tipo</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="tipoMovimentacaoChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('tipoMovimentacaoChart').getContext('2d');
+    
+    // Dados para o gráfico (simplificado)
+    const entradas = {{ movimentacoes_periodo|selectattr("tipo", "equalto", "entrada")|map(attribute="quantidade")|sum }};
+    const saidas = {{ movimentacoes_periodo|selectattr("tipo", "equalto", "saida")|map(attribute="quantidade")|sum }};
+    
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Entradas', 'Saídas'],
+            datasets: [{
+                data: [entradas, saidas],
+                backgroundColor: ['#28a745', '#ffc107'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+@media print {
+    .navbar, .sidebar, .btn-group, .d-print-none {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}

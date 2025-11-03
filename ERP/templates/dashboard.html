@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block page_title %}Dashboard de Estoque{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Cards de Estatísticas -->
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_produtos }}</h4>
+                        <p class="mb-0">Total de Produtos</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-boxes fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>R$ {{ "%.2f"|format(estoque_valor) }}</h4>
+                        <p class="mb-0">Valor do Estoque</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ estoque_baixo }}</h4>
+                        <p class="mb-0">Estoque Baixo</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4>{{ total_categorias }}</h4>
+                        <p class="mb-0">Categorias</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-tags fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Consulta em Tempo Real -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-sync-alt me-2"></i>Consulta em Tempo Real - Estoque
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover" id="tabela-estoque">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Categoria</th>
+                                <th>Estoque Atual</th>
+                                <th>Mínimo</th>
+                                <th>Valor Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="estoque-data">
+                            <!-- Dados carregados via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movimentações Recentes -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>Movimentações Recentes
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% for mov in movimentacoes_recentes %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ mov.produto_nome }}</h6>
+                            <small class="text-{{ 'success' if mov.tipo == 'entrada' else 'danger' }}">
+                                {{ mov.quantidade }} uni.
+                            </small>
+                        </div>
+                        <p class="mb-1 small">{{ mov.motivo|title }}</p>
+                        <small class="text-muted">{{ mov.data_movimentacao[:16] }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('cadastrar_produto') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Novo Produto
+                    </a>
+                    <a href="{{ url_for('entrada_estoque') }}" class="btn btn-success">
+                        <i class="fas fa-sign-in-alt me-2"></i>Entrada Estoque
+                    </a>
+                    <a href="{{ url_for('saida_estoque') }}" class="btn btn-warning">
+                        <i class="fas fa-sign-out-alt me-2"></i>Saída Estoque
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Carregar dados de estoque em tempo real
+function carregarEstoque() {
+    fetch('/api/estoque')
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('estoque-data');
+            tbody.innerHTML = '';
+            
+            data.forEach(produto => {
+                const statusClass = produto.estoque_baixo ? 'danger' : 'success';
+                const statusText = produto.estoque_baixo ? 'Baixo' : 'Normal';
+                
+                const row = `
+                    <tr>
+                        <td>${produto.nome}</td>
+                        <td>${produto.categoria || '-'}</td>
+                        <td>${produto.quantidade_atual}</td>
+                        <td>${produto.quantidade_minima}</td>
+                        <td>R$ ${produto.valor_total.toFixed(2)}</td>
+                        <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        });
+}
+
+// Carregar dados inicialmente e a cada 30 segundos
+carregarEstoque();
+setInterval(carregarEstoque, 30000);
+</script>
+{% endblock %}

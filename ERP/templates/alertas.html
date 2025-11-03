@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block page_title %}Alertas do Sistema{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Alertas e Notificações</h2>
+    <div class="btn-group">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+            <i class="fas fa-sync-alt me-2"></i>Atualizar Alertas
+        </a>
+        {% if alertas|selectattr("lido", "equalto", 0)|list|length > 0 %}
+        <form method="POST" action="{{ url_for('marcar_todos_lidos') }}" style="display: inline;">
+            <button type="submit" class="btn btn-outline-success">
+                <i class="fas fa-check-double me-2"></i>Marcar Todos como Lidos
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Lista de Alertas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bell me-2"></i>Alertas do Sistema
+                    <span class="badge bg-danger ms-2">{{ alertas|selectattr("lido", "equalto", 0)|list|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                {% if alertas %}
+                <div class="list-group list-group-flush">
+                    {% for alerta in alertas %}
+                    <div class="list-group-item {% if not alerta.lido %}alertas-pendentes bg-light{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if alerta.tipo == 'estoque_baixo' %}
+                                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                                        <span class="badge bg-warning me-2">Estoque Baixo</span>
+                                    {% elif alerta.tipo == 'estoque_zero' %}
+                                        <i class="fas fa-times-circle text-danger me-2"></i>
+                                        <span class="badge bg-danger me-2">Estoque Zerado</span>
+                                    {% elif alerta.tipo == 'reposicao' %}
+                                        <i class="fas fa-shopping-cart text-info me-2"></i>
+                                        <span class="badge bg-info me-2">Reposição</span>
+                                    {% else %}
+                                        <i class="fas fa-info-circle text-primary me-2"></i>
+                                        <span class="badge bg-primary me-2">Informação</span>
+                                    {% endif %}
+                                    
+                                    {% if alerta.lido %}
+                                        <span class="badge bg-success">Lido</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Não Lido</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <h6 class="mb-1">{{ alerta.mensagem }}</h6>
+                                <p class="mb-1 small">
+                                    <strong>Produto:</strong> {{ alerta.produto_nome }}
+                                    {% if alerta.codigo_barras %}
+                                    | <strong>Código:</strong> {{ alerta.codigo_barras }}
+                                    {% endif %}
+                                </p>
+                                
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>{{ alerta.data_alerta[:16] }}
+                                </small>
+                            </div>
+                            
+                            <div class="btn-group ms-3">
+                                {% if not alerta.lido %}
+                                <form method="POST" action="{{ url_for('marcar_lido', id=alerta.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Marcar como lido">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('entrada_estoque') }}?produto_id={{ alerta.produto_id }}" 
+                                   class="btn btn-sm btn-outline-primary" title="Registrar Entrada">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">Nenhum alerta no momento</h4>
+                    <p class="text-muted">O sistema gerará alertas automaticamente quando necessário</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Estatísticas de Alertas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Resumo de Alertas</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Total de Alertas
+                        <span class="badge bg-primary rounded-pill">{{ alertas|length }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Não Lidos
+                        <span class="badge bg-danger rounded-pill">{{ alertas|selectattr("lido", "equalto", 0)|list|length }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Estoque Baixo
+                        <span class="badge bg-warning rounded-pill">{{ alertas|selectattr("tipo", "equalto", "estoque_baixo")|list|length }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        Estoque Zerado
+                        <span class="badge bg-danger rounded-pill">{{ alertas|selectattr("tipo", "equalto", "estoque_zero")|list|length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ações Rápidas -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('listar_produtos') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-boxes me-2"></i>Ver Todos Produtos
+                    </a>
+                    <a href="{{ url_for('entrada_estoque') }}" class="btn btn-outline-success">
+                        <i class="fas fa-sign-in-alt me-2"></i>Registrar Entrada
+                    </a>
+                    <a href="{{ url_for('relatorios_gerenciais') }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-2"></i>Ver Relatórios
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

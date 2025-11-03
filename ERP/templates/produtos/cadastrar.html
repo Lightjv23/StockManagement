@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block page_title %}Cadastrar Produto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-plus-circle me-2"></i>Cadastrar Novo Produto
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nome" class="form-label">Nome do Produto *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="categoria_id" class="form-label">Categoria *</label>
+                            <select class="form-select" id="categoria_id" name="categoria_id" required>
+                                <option value="">Selecione uma categoria</option>
+                                {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">{{ categoria.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="codigo_barras" class="form-label">Código de Barras</label>
+                            <input type="text" class="form-control" id="codigo_barras" name="codigo_barras">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="preco_custo" class="form-label">Preço de Custo (R$)</label>
+                            <input type="number" step="0.01" class="form-control" id="preco_custo" name="preco_custo">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="preco_venda" class="form-label">Preço de Venda (R$)</label>
+                            <input type="number" step="0.01" class="form-control" id="preco_venda" name="preco_venda">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="quantidade_minima" class="form-label">Quantidade Mínima</label>
+                            <input type="number" class="form-control" id="quantidade_minima" name="quantidade_minima" value="10" min="0">
+                            <div class="form-text">Alerta será gerado quando estoque atingir este valor</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="especificacoes_tecnicas" class="form-label">Especificações Técnicas</label>
+                        <textarea class="form-control" id="especificacoes_tecnicas" name="especificacoes_tecnicas" rows="4" placeholder="Descrição detalhada, especificações, observações..."></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_produtos') }}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Cadastrar Produto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

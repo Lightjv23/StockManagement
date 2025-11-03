@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block page_title %}Editar Produto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Editar Produto
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nome" class="form-label">Nome do Produto *</label>
+                            <input type="text" class="form-control" id="nome" name="nome" 
+                                   value="{{ produto.nome }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="categoria_id" class="form-label">Categoria *</label>
+                            <select class="form-select" id="categoria_id" name="categoria_id" required>
+                                <option value="">Selecione uma categoria</option>
+                                {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}" 
+                                    {% if produto.categoria_id == categoria.id %}selected{% endif %}>
+                                    {{ categoria.nome }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="codigo_barras" class="form-label">Código de Barras</label>
+                            <input type="text" class="form-control" id="codigo_barras" name="codigo_barras"
+                                   value="{{ produto.codigo_barras or '' }}">
+                            <div class="form-text">Deixe em branco para gerar automaticamente</div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="preco_custo" class="form-label">Preço de Custo (R$)</label>
+                            <input type="number" step="0.01" class="form-control" id="preco_custo" name="preco_custo"
+                                   value="{{ "%.2f"|format(produto.preco_custo or 0) }}">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="preco_venda" class="form-label">Preço de Venda (R$)</label>
+                            <input type="number" step="0.01" class="form-control" id="preco_venda" name="preco_venda"
+                                   value="{{ "%.2f"|format(produto.preco_venda or 0) }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="quantidade_atual" class="form-label">Quantidade Atual</label>
+                            <input type="number" class="form-control" id="quantidade_atual" name="quantidade_atual"
+                                   value="{{ produto.quantidade_atual }}" min="0" readonly>
+                            <div class="form-text">Use movimentações para alterar estoque</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="quantidade_minima" class="form-label">Quantidade Mínima *</label>
+                            <input type="number" class="form-control" id="quantidade_minima" name="quantidade_minima" 
+                                   value="{{ produto.quantidade_minima }}" min="0" required>
+                            <div class="form-text">Alerta será gerado quando estoque atingir este valor</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="ativo" class="form-label">Status</label>
+                            <select class="form-select" id="ativo" name="ativo">
+                                <option value="1" {% if produto.ativo %}selected{% endif %}>Ativo</option>
+                                <option value="0" {% if not produto.ativo %}selected{% endif %}>Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="especificacoes_tecnicas" class="form-label">Especificações Técnicas</label>
+                        <textarea class="form-control" id="especificacoes_tecnicas" name="especificacoes_tecnicas" 
+                                  rows="4" placeholder="Descrição detalhada, especificações, observações...">{{ produto.especificacoes_tecnicas or '' }}</textarea>
+                    </div>
+
+                    <!-- Informações do Sistema -->
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">Informações do Sistema</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">Data de Criação:</small><br>
+                                    <strong>{{ produto.data_criacao[:16] }}</strong>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Última Atualização:</small><br>
+                                    <strong>{{ produto.data_atualizacao[:16] }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_produtos') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save me-2"></i>Atualizar Produto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Estatísticas do Produto -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Estatísticas do Produto
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted">Valor em Estoque</h6>
+                            <h4 class="text-primary">
+                                R$ {{ "%.2f"|format((produto.quantidade_atual * produto.preco_custo) or 0) }}
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted">Margem de Lucro</h6>
+                            <h4 class="{% if produto.preco_venda and produto.preco_custo and produto.preco_venda > produto.preco_custo %}text-success{% else %}text-danger{% endif %}">
+                                {% if produto.preco_venda and produto.preco_custo and produto.preco_custo > 0 %}
+                                    {{ "%.1f"|format(((produto.preco_venda - produto.preco_custo) / produto.preco_custo * 100)) }}%
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted">Status Estoque</h6>
+                            <h4>
+                                {% if produto.quantidade_atual == 0 %}
+                                    <span class="badge bg-danger">Zerado</span>
+                                {% elif produto.quantidade_atual <= produto.quantidade_minima %}
+                                    <span class="badge bg-warning">Baixo</span>
+                                {% else %}
+                                    <span class="badge bg-success">Normal</span>
+                                {% endif %}
+                            </h4>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border rounded p-3">
+                            <h6 class="text-muted">Ações Rápidas</h6>
+                            <div class="btn-group-vertical w-100">
+                                <a href="{{ url_for('entrada_estoque') }}?produto_id={{ produto.id }}" 
+                                   class="btn btn-sm btn-success mb-1">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Entrada
+                                </a>
+                                <a href="{{ url_for('saida_estoque') }}?produto_id={{ produto.id }}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-sign-out-alt me-1"></i>Saída
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calcular margem de lucro em tempo real
+    const precoCusto = document.getElementById('preco_custo');
+    const precoVenda = document.getElementById('preco_venda');
+    
+    function calcularMargem() {
+        const custo = parseFloat(precoCusto.value) || 0;
+        const venda = parseFloat(precoVenda.value) || 0;
+        
+        if (custo > 0 && venda > custo) {
+            const margem = ((venda - custo) / custo * 100).toFixed(1);
+            console.log(`Margem de lucro: ${margem}%`);
+        }
+    }
+    
+    precoCusto.addEventListener('change', calcularMargem);
+    precoVenda.addEventListener('change', calcularMargem);
+    
+    // Validação de preços
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const custo = parseFloat(precoCusto.value) || 0;
+        const venda = parseFloat(precoVenda.value) || 0;
+        
+        if (venda > 0 && custo > 0 && venda < custo) {
+            if (!confirm('Preço de venda é menor que o preço de custo. Deseja continuar?')) {
+                e.preventDefault();
+                precoVenda.focus();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
