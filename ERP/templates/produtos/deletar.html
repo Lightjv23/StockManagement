@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block page_title %}Confirmar Exclusão de Produto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-trash-alt me-2"></i>Confirmar Exclusão
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Atenção!
+                    </h5>
+                    <p class="mb-0">Esta ação não pode ser desfeita. Tem certeza que deseja excluir este produto?</p>
+                </div>
+
+                <!-- Informações do Produto -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Produto a ser excluído</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td width="30%"><strong>Nome:</strong></td>
+                                <td>{{ produto.nome }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Categoria:</strong></td>
+                                <td>{{ produto.categoria_nome or 'Não categorizado' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Código Barras:</strong></td>
+                                <td>{{ produto.codigo_barras or 'Não informado' }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Estoque Atual:</strong></td>
+                                <td>
+                                    <span class="fw-bold">{{ produto.quantidade_atual }}</span> unidades
+                                    {% if produto.quantidade_atual > 0 %}
+                                    <span class="badge bg-warning ms-2">Possui estoque</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>Valor em Estoque:</strong></td>
+                                <td>R$ {{ "%.2f"|format((produto.quantidade_atual * produto.preco_custo) or 0) }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Consequências da Exclusão -->
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Consequências da exclusão:</h6>
+                    <ul class="mb-0 small">
+                        <li>O produto será removido do sistema</li>
+                        <li>O histórico de movimentações será mantido para relatórios</li>
+                        <li>Não será possível gerar novas movimentações para este produto</li>
+                        {% if produto.quantidade_atual > 0 %}
+                        <li class="text-warning"><strong>ATENÇÃO: Este produto ainda possui estoque!</strong></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <form method="POST">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('listar_produtos') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Tem certeza absoluta? Esta ação não pode ser desfeita.')">
+                            <i class="fas fa-trash-alt me-2"></i>Sim, Excluir Produto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Alternativa: Marcar como Inativo -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Alternativa Recomendada</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Em vez de excluir, você pode marcar o produto como <strong>inativo</strong>:</p>
+                <ul class="small text-muted">
+                    <li>O produto não aparecerá nas listas normais</li>
+                    <li>O histórico é preservado integralmente</li>
+                    <li>Pode ser reativado a qualquer momento</li>
+                    <li>Melhor para relatórios e auditoria</li>
+                </ul>
+                <a href="{{ url_for('editar_produto', id=produto.id) }}" class="btn btn-outline-warning btn-sm">
+                    <i class="fas fa-ban me-1"></i>Marcar como Inativo
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
