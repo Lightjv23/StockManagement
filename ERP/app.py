@@ -229,16 +229,7 @@ def deletar_produto(id):
     conn = get_db_connection()
     
     # Buscar o produto para confirmar
-    produto = conn.execute('''
-        SELECT p.*, c.nome as categoria_nome 
-        FROM produtos p 
-        LEFT JOIN categorias c ON p.categoria_id = c.id 
-        WHERE p.id = ?
-    ''', (id,)).fetchone()
-    
-    if produto is None:
-        flash('Produto não encontrado!', 'error')
-        return redirect(url_for('listar_produtos'))
+    produto = conn.execute('SELECT * FROM produtos WHERE id=?', (id,)).fetchone()
     
     if request.method == 'POST':
         try:
@@ -255,7 +246,7 @@ def deletar_produto(id):
             else:
                 # Se não houver movimentações, deletar permanentemente
                 conn.execute('DELETE FROM produtos WHERE id = ?', (id,))
-                flash('Produto deletado com sucesso!', 'success')
+                flash('Produto excluído com sucesso!', 'success')
             
             conn.commit()
             return redirect(url_for('listar_produtos'))
