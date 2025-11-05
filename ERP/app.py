@@ -297,7 +297,7 @@ def entrada_estoque():
                 data_atualizacao = CURRENT_TIMESTAMP
             WHERE id = ?
         ''', (quantidade, produto_id))
-        
+        gerar_alertas_automaticos(conn)
         conn.commit()
         flash('Entrada de estoque registrada com sucesso!', 'success')
         return redirect(url_for('listar_movimentacoes'))
@@ -337,7 +337,7 @@ def saida_estoque():
                     data_atualizacao = CURRENT_TIMESTAMP
                 WHERE id = ?
             ''', (quantidade, produto_id))
-            
+            gerar_alertas_automaticos(conn)
             conn.commit()
             flash('Saída de estoque registrada com sucesso!', 'success')
             return redirect(url_for('listar_movimentacoes'))
@@ -384,9 +384,6 @@ def api_estoque():
 def listar_alertas():
     conn = get_db_connection()
     
-    # Gerar alertas automaticamente
-    gerar_alertas_automaticos(conn)
-    
     alertas = conn.execute('''
         SELECT a.*, p.nome as produto_nome, p.codigo_barras
         FROM alertas a
@@ -402,7 +399,8 @@ def gerar_alertas_automaticos(conn):
     produtos_estoque_baixo = conn.execute('''
         SELECT id, nome, quantidade_atual, quantidade_minima
         FROM produtos 
-        WHERE quantidade_atual <= quantidade_minima 
+        WHERE quantidade_atual <= quantidade_minima
+        AND quantidade_atual > 0
         AND ativo = 1
     ''').fetchall()
     
