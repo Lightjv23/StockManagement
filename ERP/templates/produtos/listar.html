@@ -62,14 +62,18 @@
                             <div class="btn-group btn-group-sm">
                                 <a href="{{ url_for('entrada_estoque') }}?produto_id={{ produto.id }}" 
                                    class="btn btn-outline-success" title="Entrada Estoque">
-                                    <i class="fas fa-sign-in-alt"></i>
+                                    <i class="fas fa-plus"></i>
                                 </a>
                                 <a href="{{ url_for('saida_estoque') }}?produto_id={{ produto.id }}" 
                                    class="btn btn-outline-warning" title="Saída Estoque">
-                                    <i class="fas fa-sign-out-alt"></i>
+                                    <i class="fas fa-minus"></i>
                                 </a>
                                 <a href="{{ url_for('editar_produto', id=produto.id) }}" class="btn btn-outline-info" title="Editar">
                                     <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('deletar_produto', id=produto.id) }}" 
+                                   class="btn btn-outline-danger" title="Excluir">
+                                    <i class="fas fa-trash-alt"></i>
                                 </a>
                             </div>
                         </td>
